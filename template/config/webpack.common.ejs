@@ -3,8 +3,6 @@ const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 const os = require('os');
-const HappyPack = require('happypack');
-const happyThreadPool = HappyPack.ThreadPool({ size: os.cpus().length });
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const devMode = process.env.NODE_ENV === 'development';
 const APP_CONFIG = require('../env-config.json');
@@ -51,7 +49,7 @@ module.exports = {
       {
         test: /\.m?jsx?$/,
         exclude: /node_modules/,
-        use: 'happypack/loader?id=js',
+        use: 'babel-loader,
       },
       {
         test: <%= answers.cssPreprocessor == 'none' ? /\.css$/ : (answers.cssPreprocessor == 'less' ? /\.less$/ : /\.scss$/) %>,
@@ -96,10 +94,6 @@ module.exports = {
   },
   plugins: [
     new FriendlyErrorsWebpackPlugin(),
-    new webpack.DllReferencePlugin({
-      context: process.cwd(), 
-      manifest: require(path.resolve(__dirname, '..', 'dist', 'dll', "<%= answers.template %>-manifest.json"))
-    }),
     new MiniCssExtractPlugin({
       filename: devMode ? '[name].css' : '[name].[hash].css',
       chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
@@ -116,29 +110,6 @@ module.exports = {
       filename: path.resolve(__dirname, '..', 'dist/index.html'),
       template: path.resolve(__dirname, '..', 'dist/dll/index.html'),
     }),
-    new HappyPack({
-      id: 'js',
-      threadPool: happyThreadPool,
-      loaders: [{
-        loader: 'babel-loader',
-        options: {
-          cacheDirectory: true,
-          presets: [['@babel/preset-env', {
-            "useBuiltIns": "usage",
-            "corejs": 3
-          }], "@babel/preset-react"],
-          plugins: ['@babel/transform-runtime',
-            "@babel/plugin-proposal-class-properties", [
-              "import",
-              {
-                "libraryName": "antd",
-                "style": true
-              }
-            ]
-          ]
-        }
-      }]
-    })
   ],
   resolve: {
     alias: {
